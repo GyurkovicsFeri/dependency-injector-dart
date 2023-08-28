@@ -1,7 +1,7 @@
 name: dependency_injector_dart
 description: A sample command-line application with custom built dependency injector.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/GyurkovicsFeri/dependency-injector-dart
 
 environment:
   sdk: ^3.1.0
