@@ -1,6 +1,7 @@
 import 'package:dependency_injector_dart/base_service.dart';
 import 'package:dependency_injector_dart/composite_service_delegate.dart';
 import 'package:dependency_injector_dart/dependency_container.dart';
+import 'package:dependency_injector_dart/dependency_container_non_flutter.dart';
 
 DependencyContainer createContainer() {
   return DependencyContainer()
