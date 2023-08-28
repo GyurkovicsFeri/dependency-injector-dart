@@ -1,18 +1,16 @@
-
-import 'Service.dart';
+import 'base_service.dart';
 
 class CompositeServiceDelegate with CompositeDelegate<ServiceDelegate> implements ServiceDelegate {
   @override
-  void onFunctionality(Service service) {
+  void onFunctionality(BaseService service) {
     call((delegate) => delegate.onFunctionality(service));
   }
 
   @override
-  void onDidFunctionality(Service service) {
+  void onDidFunctionality(BaseService service) {
     call((delegate) => delegate.onDidFunctionality(service));
   }
 }
-
 
 mixin CompositeDelegate<T> {
   List<T> delegates = [];

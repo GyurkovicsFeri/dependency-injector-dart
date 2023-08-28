@@ -1,5 +1,4 @@
 import 'dart:mirrors';
-import 'dart:collection';
 
 abstract class DependecyInjector<T> {
   late Type type;
@@ -10,7 +9,9 @@ abstract class DependecyInjector<T> {
 typedef DependencyCallback<T> = T Function(DependencyContainer dependencyContainer);
 
 class SimpleDependencyInjector<T> implements DependecyInjector<T> {
+  @override
   late Type type;
+  @override
   late String tag;
   DependencyCallback<T> callback;
 
@@ -19,13 +20,16 @@ class SimpleDependencyInjector<T> implements DependecyInjector<T> {
     this.tag = stringTag ?? '';
   }
 
+  @override
   T createInstance(DependencyContainer dependencyContainer) {
     return this.callback(dependencyContainer);
   }
 }
 
 class SingletonDependencyInjector<T> implements DependecyInjector<T> {
+  @override
   late Type type;
+  @override
   late String tag;
   T? instance;
   DependencyCallback<T> callback;
@@ -35,6 +39,7 @@ class SingletonDependencyInjector<T> implements DependecyInjector<T> {
     this.tag = tag ?? '';
   }
 
+  @override
   T createInstance(DependencyContainer dependencyContainer) {
     if (this.instance == null) {
       this.instance = this.callback(dependencyContainer);
@@ -47,15 +52,15 @@ class DependencyContainer {
   List<DependecyInjector> dependencyInjectors = [];
 
   void add<T>(DependencyCallback<T> callback, {Type? type, String? tag}) {
-    this.addDependencyInjector(SimpleDependencyInjector<T>(callback, tag: type, stringTag: tag));
+    addDependencyInjector(SimpleDependencyInjector<T>(callback, tag: type, stringTag: tag));
   }
 
   void addSingleton<T>(DependencyCallback<T> callback, {Type? type, String? tag}) {
-    this.addDependencyInjector(SingletonDependencyInjector<T>(callback, type: type, tag: tag));
+    addDependencyInjector(SingletonDependencyInjector<T>(callback, type: type, tag: tag));
   }
 
   void addDependencyInjector<T>(DependecyInjector<T> dependencyInjector) {
-    this.dependencyInjectors.add(dependencyInjector);
+    dependencyInjectors.add(dependencyInjector);
   }
 
   void addClass(Type clazz) {
@@ -69,21 +74,21 @@ class DependencyContainer {
 
   void addClasses(List<Type> classes) {
     for (Type clazz in classes) {
-      this.addClass(clazz);
+      addClass(clazz);
     }
   }
 
   T get<T>({Type? type, String? tag}) {
-    final injector = this.dependencyInjectors.firstWhereOrNull(
+    final injector = dependencyInjectors.firstWhereOrNull(
         (dependencyInjector) => dependencyInjector.type == (type ?? T) && tag == null || dependencyInjector.tag == tag);
     if (injector == null) throw Exception('Dependency not found: $T ($type, $tag)');
     return injector.createInstance(this) as T;
   }
 
   List<T> getList<T>({Type? type, String? tag}) {
-    final injectors = this.dependencyInjectors.where(
+    final injectors = dependencyInjectors.where(
         (dependencyInjector) => dependencyInjector.type == (type ?? T) && tag == null || dependencyInjector.tag == tag);
-    if (injectors.length == 0) throw Exception('Dependency not found: $T ($type, $tag)');
+    if (injectors.isEmpty) throw Exception('Dependency not found: $T ($type, $tag)');
     return injectors.map((e) => e.createInstance(this) as T).toList();
   }
 
@@ -93,12 +98,12 @@ class DependencyContainer {
       l.declarations.forEach((dk, d) {
         if (d is ClassMirror) {
           ClassMirror cm = d;
-          cm.metadata.forEach((md) {
+          for (var md in cm.metadata) {
             InstanceMirror metadata = md;
             if (metadata.type == reflectClass(Component)) {
-              this.addClass(cm.reflectedType);
+              addClass(cm.reflectedType);
             }
-          });
+          }
         }
       });
     });
@@ -110,7 +115,7 @@ class Component {
   final Type? type;
   final String? tag;
 
-  const Component({this.singleton = false, Type? type, this.tag}) : this.type = type;
+  const Component({this.singleton = false, this.type, this.tag});
 
   register(DependencyContainer dependencyContainer, Type clazz) {
     final reflectedClazz = reflectClass(clazz);
@@ -120,14 +125,17 @@ class Component {
     }
 
     final constructorParameterTypes = emptyConstructor.parameters.toList();
-    if (this.singleton) {
-      dependencyContainer.addSingleton((c) => newInstance(c, reflectedClazz, constructorParameterTypes), type: this.type ?? clazz, tag: tag);
+    if (singleton) {
+      dependencyContainer.addSingleton((c) => newInstance(c, reflectedClazz, constructorParameterTypes),
+          type: type ?? clazz, tag: tag);
     } else {
-      dependencyContainer.add((c) => newInstance(c, reflectedClazz, constructorParameterTypes), type: this.type ?? clazz, tag: tag);
+      dependencyContainer.add((c) => newInstance(c, reflectedClazz, constructorParameterTypes),
+          type: type ?? clazz, tag: tag);
     }
   }
 
-  dynamic newInstance(DependencyContainer c, ClassMirror reflectedClazz, List<ParameterMirror> constructorParameterTypes) {
+  dynamic newInstance(
+      DependencyContainer c, ClassMirror reflectedClazz, List<ParameterMirror> constructorParameterTypes) {
     final parameters = constructorParameterTypes.map((e) => getParameter(c, e)).toList();
     return reflectedClazz.newInstance(Symbol.empty, parameters).reflectee;
   }

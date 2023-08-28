@@ -1,6 +1,6 @@
-import 'CompositeServiceDelegate.dart';
-import 'DependencyContainer.dart';
-import 'Service.dart';
+import 'package:dependency_injector_dart/base_service.dart';
+import 'package:dependency_injector_dart/composite_service_delegate.dart';
+import 'package:dependency_injector_dart/dependency_container.dart';
 
 DependencyContainer createContainer() {
   return DependencyContainer()
@@ -10,15 +10,15 @@ DependencyContainer createContainer() {
 
 void main() {
   final dependencyContainer = createContainer();
-  final service = dependencyContainer.get<Service>();
+  final service = dependencyContainer.get<BaseService>();
   service.functionality();
   final loggingDelegate = dependencyContainer.get<ChildDelegate1>();
   loggingDelegate.prefix = "Modified";
   service.functionality();
 }
 
-@Component(singleton: true, type: Service)
-class MyService extends Service {
+@Component(singleton: true, type: BaseService)
+class MyService extends BaseService {
   MyService(@Inject(tag: "Composite") ServiceDelegate delegate) {
     this.delegate = delegate;
   }
@@ -38,26 +38,25 @@ class ChildDelegate1 extends ServiceDelegate {
   ChildDelegate1(@Inject(tag: "ChildDelegatePrefix") this.prefix);
 
   @override
-  void onFunctionality(Service service) {
+  void onFunctionality(BaseService service) {
     print('$prefix: onFunctionality');
   }
 
   @override
-  void onDidFunctionality(Service service) {
+  void onDidFunctionality(BaseService service) {
     print('$prefix: onDidFunctionality');
   }
 }
 
-
 @Component(singleton: true, type: ChildDelegate2, tag: "CompositeChild")
 class ChildDelegate2 extends ServiceDelegate {
   @override
-  void onFunctionality(Service service) {
+  void onFunctionality(BaseService service) {
     print('ChildDelegate2 onFunctionality');
   }
 
   @override
-  void onDidFunctionality(Service service) {
+  void onDidFunctionality(BaseService service) {
     print('ChildDelegate2 onDidFunctionality');
   }
 }
